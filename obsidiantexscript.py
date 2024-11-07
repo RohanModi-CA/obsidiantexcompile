@@ -115,7 +115,7 @@ def write_file(modified_file_contents):
     file.close()
     return f"/tmp/{name}.md"
 
-def convert_to_pdf(file_name, modified_file):
+def convert_to_pdf(file_name, modified_file, modified_file_contents):
     folder = "/".join(file_name.split("/")[:-1])
     md = file_name.split("/")[-1][:-3]
     if "\\ " in md:
@@ -125,7 +125,18 @@ def convert_to_pdf(file_name, modified_file):
         makedirs(f"{folder}/output")
 
     resources = "/Users/oliviachoi/Documents/preamble.tex" # Location of your preamble.tex file
-    system(f"/usr/local/bin/pandoc --pdf-engine=/Library/TeX/texbin/pdflatex  -o \"{folder}/output/{md}.pdf\" {modified_file} -V geometry:margin=0.5in -H {resources} --variable documentclass=article")
+
+    with open("docsetup.txt", "r") as docfile:
+        docsetup = docfile.read()
+    
+    tex_file = docsetup + modified_file_contents + " \n \n \\end{document}\n"
+
+    with open(f"{file_root_path}pdftex/doctocompile.tex") as doctocompiletex:
+        doctocompiletex.write(tex_file)
+
+    command_to_run =f"/usr/local/bin/pandoc --pdf-engine=/Library/TeX/texbin/pdflatex  -o \"{folder}/output/{md}.pdf\" {modified_file} -V geometry:margin=0.5in -H {resources} --variable documentclass=article"
+
+    system(command_to_run)
     system(f"rm {modified_file}") # cleanup the temporary file
     return f"\"{folder}/output/{md}.pdf\"" 
 
@@ -138,7 +149,7 @@ def main():
     modified_file_contents = embed_images(modified_file_contents)
 
     modified_file = write_file(modified_file_contents)
-    m1file = convert_to_pdf(file_name,modified_file)
+    m1file = convert_to_pdf(file_name,modified_file, modified_file_contents)
     file_name = file_name.split("/")[-1]
     print(f"Converted {file_name} to PDF.")
     system(f"open {m1file}")
