@@ -1,0 +1,23 @@
+\usepackage{tcolorbox}
+\usepackage{enumerate}
+\usepackage{amsmath}
+\usepackage{physics}
+\usepackage{graphicx}
+
+\newcommand{\n}{\\}
+
+
+\newcommand{\grande}[1]{ { \large { #1} }    }
+\newcommand{\Grande}[1]{ { \Large { #1} }    }
+\newcommand{\GRANDE}[1]{ { \LARGE { #1} }    }
+
+\let\mboxed\boxed
+\renewcommand{\boxed}[1]{\(\mboxed{ \text{\textbf{\Large { #1 }  }  }  }     \) \medskip  }
+
+\let\oldtitle\title
+\renewcommand{\title}[1]{\oldtitle{\textbf{#1}}}
+
+
+\title{Problem Set}
+\author{Olivia Choi}
+\date{\today}
