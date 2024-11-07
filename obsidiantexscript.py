@@ -1,3 +1,4 @@
+import re
 from random import choice
 from os import system,sys,path,makedirs
 
@@ -15,6 +16,10 @@ def remove_dollar_signs(file_contents):
     is_start_or_end_of_block = lambda num: ("$$" in line and "\\begin{" in file_contents_list[num+1]) or ("$$" in line and "\\end{" in file_contents_list[num-1])
 
     for num,line in enumerate(file_contents_list):
+        line = line.replace(r"\newpage", "")
+        """ also kill the div tags    """
+        line = re.sub(r'<div.*?>.*?</div>', '', line, flags=re.DOTALL)
+
         if is_start_or_end_of_block(num):
             inside_dollar_signs = not inside_dollar_signs
             modified_file_contents_list.append(line.replace("$$", ""))
@@ -115,7 +120,7 @@ def write_file(modified_file_contents):
     file.close()
     return f"/tmp/{name}.md"
 
-def convert_to_pdf(file_name, modified_file, modified_file_contents):
+def convert_to_pdf(file_name, modified_file, modified_file_contents, root_path):
     folder = "/".join(file_name.split("/")[:-1])
     md = file_name.split("/")[-1][:-3]
     if "\\ " in md:
@@ -126,30 +131,41 @@ def convert_to_pdf(file_name, modified_file, modified_file_contents):
 
     resources = "/Users/oliviachoi/Documents/preamble.tex" # Location of your preamble.tex file
 
-    with open("docsetup.txt", "r") as docfile:
+    with open(f"{root_path}docsetup.txt", "r") as docfile:
         docsetup = docfile.read()
     
     tex_file = docsetup + modified_file_contents + " \n \n \\end{document}\n"
 
-    with open(f"{file_root_path}pdftex/doctocompile.tex") as doctocompiletex:
+    with open(f"{root_path}pdftex/{md}.tex", "a") as doctocompiletex:
+        doctocompiletex.write(" ")
+    with open(f"{root_path}pdftex/{md}.tex", "w") as doctocompiletex:
         doctocompiletex.write(tex_file)
 
-    command_to_run =f"/usr/local/bin/pandoc --pdf-engine=/Library/TeX/texbin/pdflatex  -o \"{folder}/output/{md}.pdf\" {modified_file} -V geometry:margin=0.5in -H {resources} --variable documentclass=article"
+    # command_to_run =f"/usr/local/bin/pandoc --pdf-engine=/Library/TeX/texbin/pdflatex  -o \"{folder}/output/{md}.pdf\" {modified_file} -V geometry:margin=0.5in -H {resources} --variable documentclass=article"
 
-    system(command_to_run)
+    command2=f"/Library/TeX/texbin/xelatex -output-directory={root_path}pdftex/  -interaction=nonstopmode '{root_path}pdftex/{md}.tex'"
+
+    # system(command_to_run)
+    system(command2)
     system(f"rm {modified_file}") # cleanup the temporary file
-    return f"\"{folder}/output/{md}.pdf\"" 
+    
+    return f"'{root_path}pdftex/{md}.pdf'"
+    """ this is the old return   """
+    # return f"\"{folder}/output/{md}.pdf\"" 
 
 def main():
     file_name = sys.argv[1]
     file_contents = get_file(file_name)
+
+
+    root_path = "/Users/oliviachoi/Documents/obsidiantex/"
 
     modified_file_contents = remove_dollar_signs(file_contents)
     modified_file_contents = style_callouts(modified_file_contents)
     modified_file_contents = embed_images(modified_file_contents)
 
     modified_file = write_file(modified_file_contents)
-    m1file = convert_to_pdf(file_name,modified_file, modified_file_contents)
+    m1file = convert_to_pdf(file_name,modified_file, modified_file_contents,root_path)
     file_name = file_name.split("/")[-1]
     print(f"Converted {file_name} to PDF.")
     system(f"open {m1file}")
