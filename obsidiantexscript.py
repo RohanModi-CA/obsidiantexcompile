@@ -29,6 +29,16 @@ def remove_dollar_signs(file_contents):
     modified_file_contents = "\n".join(modified_file_contents_list)
     return modified_file_contents
 
+def replace_dollar_signs(file_contents):
+    """Replaces $$ with \[ and \] in a string, handling nested cases."""
+
+    # Use a regular expression to find and replace the dollar signs
+    # The regex handles potential nested $$ pairs correctly
+    #  - (?:(?!\$\$).)* matches any character except $$ (non-capturing group).
+    #  - The re.DOTALL flag ensures . matches newline characters as well.
+    return re.sub(r"\$\$((?:(?!\$\$).)*)(\$\$)", r"\[\1\]", text, flags=re.DOTALL)
+
+
 def style_callouts(file_contents):
     file_contents_list = file_contents.split("\n")
     modified_file_contents_list = []
@@ -162,7 +172,9 @@ def main():
 
     modified_file_contents = remove_dollar_signs(file_contents)
     modified_file_contents = style_callouts(modified_file_contents)
+    modified_file_contents = replace_dollar_signs(file_contents)
     modified_file_contents = embed_images(modified_file_contents)
+
 
     modified_file = write_file(modified_file_contents)
     m1file = convert_to_pdf(file_name,modified_file, modified_file_contents,root_path)
