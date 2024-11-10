@@ -36,7 +36,7 @@ def replace_dollar_signs(file_contents):
     # The regex handles potential nested $$ pairs correctly
     #  - (?:(?!\$\$).)* matches any character except $$ (non-capturing group).
     #  - The re.DOTALL flag ensures . matches newline characters as well.
-    return re.sub(r"\$\$((?:(?!\$\$).)*)(\$\$)", r"\[\1\]", text, flags=re.DOTALL)
+    return re.sub(r"\$\$((?:(?!\$\$).)*)(\$\$)", r"\[\1\]", file_contents, flags=re.DOTALL)
 
 
 def style_callouts(file_contents):
